@@ -1,28 +1,28 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>AI People IN OUT Counter</title>
+
+<title>AI Smart Security Camera</title>
 
 <style>
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  background:#070b12;
+  background:#060a10;
   color:#fff;
   font-family:Arial,sans-serif;
 }
 
 header{
-  padding:18px 12px;
   text-align:center;
+  padding:18px 12px;
   background:linear-gradient(135deg,#111827,#172554);
 }
 
-h1{
+header h1{
   margin:0;
   font-size:23px;
 }
@@ -34,7 +34,7 @@ header p{
 }
 
 .container{
-  max-width:1000px;
+  max-width:1050px;
   margin:auto;
   padding:14px;
 }
@@ -44,8 +44,8 @@ header p{
   width:100%;
   aspect-ratio:16/9;
   background:#000;
-  overflow:hidden;
   border-radius:18px;
+  overflow:hidden;
   border:1px solid #263244;
 }
 
@@ -53,6 +53,7 @@ video{
   width:100%;
   height:100%;
   object-fit:cover;
+  display:block;
 }
 
 canvas{
@@ -71,15 +72,64 @@ canvas{
   padding:8px 12px;
   border-radius:20px;
   font-size:12px;
+  z-index:3;
 }
 
 .dot{
+  display:inline-block;
   width:8px;
   height:8px;
-  display:inline-block;
   background:#ef4444;
   border-radius:50%;
   margin-right:5px;
+}
+
+.recording{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#000c;
+  padding:8px 12px;
+  border-radius:20px;
+  font-size:12px;
+  display:none;
+  z-index:3;
+}
+
+.recording span{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  background:red;
+  border-radius:50%;
+  margin-right:5px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  50%{opacity:.2}
+}
+
+.alert{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  background:#dc2626;
+  padding:16px 25px;
+  border-radius:14px;
+  font-size:20px;
+  font-weight:bold;
+  display:none;
+  z-index:4;
+  box-shadow:0 0 40px #f00;
+}
+
+.night{
+  filter:
+    brightness(1.35)
+    contrast(1.25)
+    saturate(.8);
 }
 
 .loading{
@@ -88,8 +138,8 @@ canvas{
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#000c;
-  z-index:5;
+  background:#000d;
+  z-index:10;
   font-size:14px;
 }
 
@@ -99,8 +149,8 @@ canvas{
 
 .stats{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:9px;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
   margin-top:12px;
 }
 
@@ -108,28 +158,28 @@ canvas{
   background:#111827;
   border:1px solid #263244;
   border-radius:14px;
-  padding:13px 6px;
+  padding:13px 5px;
   text-align:center;
 }
 
 .icon{
-  font-size:22px;
+  font-size:21px;
 }
 
 .number{
-  font-size:28px;
+  font-size:27px;
   font-weight:bold;
   margin:3px 0;
 }
 
 .label{
-  font-size:11px;
   color:#9ca3af;
+  font-size:10px;
 }
 
 .controls{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3,1fr);
   gap:9px;
   margin-top:12px;
 }
@@ -138,30 +188,75 @@ button{
   border:0;
   border-radius:12px;
   padding:14px 8px;
-  color:white;
-  background:#2563eb;
+  color:#fff;
   font-weight:bold;
   cursor:pointer;
 }
 
+.start{background:#2563eb}
 .stop{background:#dc2626}
 .switch{background:#7c3aed}
+.nightBtn{background:#0f766e}
+.record{background:#b91c1c}
+.csv{background:#15803d}
 .reset{background:#374151}
+.alarm{background:#92400e}
+
+.preview{
+  margin-top:15px;
+  background:#111827;
+  border:1px solid #263244;
+  border-radius:15px;
+  padding:13px;
+}
+
+.preview h3{
+  margin:0 0 10px;
+  font-size:15px;
+}
+
+#recordingPreview{
+  width:100%;
+  max-height:400px;
+  background:#000;
+  border-radius:10px;
+  display:none;
+}
+
+.download{
+  display:none;
+  margin-top:10px;
+  background:#2563eb;
+  color:white;
+  text-decoration:none;
+  text-align:center;
+  padding:12px;
+  border-radius:10px;
+  font-weight:bold;
+}
 
 .info{
   margin-top:12px;
   padding:14px;
-  border-radius:14px;
   background:#111827;
   border:1px solid #263244;
+  border-radius:14px;
   color:#aab2c0;
   font-size:12px;
   line-height:1.6;
 }
 
-@media(max-width:600px){
+@media(max-width:700px){
 
   .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .stats .card:last-child{
+    grid-column:1/3;
+  }
+
+  .controls{
     grid-template-columns:repeat(2,1fr);
   }
 
@@ -175,8 +270,8 @@ button{
 <body>
 
 <header>
-  <h1>👥 AI People Counter</h1>
-  <p>IN / OUT • Line Crossing • Live Tracking</p>
+  <h1>🛡️ AI Smart Security Camera</h1>
+  <p>People • IN/OUT • Recording • Night Mode • Alerts</p>
 </header>
 
 <div class="container">
@@ -196,7 +291,16 @@ button{
       <span id="status">Starting...</span>
     </div>
 
+    <div id="recordingStatus" class="recording">
+      <span></span> RECORDING
+    </div>
+
+    <div id="alertBox" class="alert">
+      ⚠️ POSSIBLE FIGHT
+    </div>
+
   </div>
+
 
   <div class="stats">
 
@@ -219,58 +323,111 @@ button{
     </div>
 
     <div class="card">
-      <div class="icon">📊</div>
+      <div class="icon">🏠</div>
       <div id="inside" class="number">0</div>
       <div class="label">INSIDE</div>
     </div>
 
+    <div class="card">
+      <div class="icon">⚠️</div>
+      <div id="alerts" class="number">0</div>
+      <div class="label">ALERTS</div>
+    </div>
+
   </div>
+
 
   <div class="controls">
 
-    <button onclick="startCamera()">
+    <button class="start" onclick="startCamera()">
       📷 Start Camera
     </button>
 
     <button class="stop" onclick="stopCamera()">
-      ⛔ Stop
+      ⛔ Stop Camera
     </button>
 
     <button class="switch" onclick="switchCamera()">
       🔄 Switch Camera
     </button>
 
-    <button class="reset" onclick="resetCounter()">
-      ♻️ Reset Counter
+    <button class="nightBtn" onclick="toggleNight()">
+      🌙 Night Mode
+    </button>
+
+    <button class="record" onclick="toggleRecording()">
+      🎥 Start Recording
+    </button>
+
+    <button class="alarm" onclick="toggleAlarm()">
+      🔊 Alarm ON/OFF
+    </button>
+
+    <button class="csv" onclick="downloadCSV()">
+      📊 Download Data
+    </button>
+
+    <button class="reset" onclick="resetAll()">
+      ♻️ Reset
     </button>
 
   </div>
 
+
+  <div class="preview">
+
+    <h3>🎥 Recording Preview</h3>
+
+    <video
+      id="recordingPreview"
+      controls>
+    </video>
+
+    <a
+      id="downloadRecording"
+      class="download"
+      download="security-recording.webm">
+      ⬇️ Download Recording
+    </a>
+
+  </div>
+
+
   <div class="info">
 
-    <b>How to use:</b><br>
+    <b>Features</b><br>
 
-    The horizontal line in the camera is the counting line.
-    When a detected person moves across the line, the system
-    determines the direction and increases IN or OUT.
+    👥 Live people detection<br>
+    🚪 IN / OUT counting<br>
+    🌙 Low-light enhancement<br>
+    🎥 Local camera recording<br>
+    ▶️ Recording preview<br>
+    ⬇️ Recording download<br>
+    📊 CSV data export<br>
+    🚨 Possible-fight movement alert<br>
+    🔊 Optional alarm
 
     <br><br>
 
-    🟢 <b>Green side → IN</b><br>
-    🔴 <b>Red side → OUT</b>
+    <b>Privacy:</b>
+    Recording stays inside the browser/device until you download it.
+    Nothing is automatically uploaded by this page.
 
     <br><br>
 
-    <b>Important:</b> This is a browser demo using AI object
-    detection and lightweight tracking. Accuracy depends on
-    camera angle, lighting, distance and people overlapping.
+    <b>Note:</b>
+    “Possible fight” is only a movement-based warning, not a
+    guaranteed determination that a fight is happening.
+    Camera-based detection can produce false alerts.
 
   </div>
 
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
 
 <script>
 
@@ -292,77 +449,66 @@ document.getElementById("status");
 const dot =
 document.getElementById("dot");
 
-const currentEl =
-document.getElementById("current");
+const alertBox =
+document.getElementById("alertBox");
 
-const inEl =
-document.getElementById("inCount");
+const recordingStatus =
+document.getElementById("recordingStatus");
 
-const outEl =
-document.getElementById("outCount");
+const preview =
+document.getElementById("recordingPreview");
 
-const insideEl =
-document.getElementById("inside");
+const downloadRecording =
+document.getElementById("downloadRecording");
 
 
 let model = null;
 let stream = null;
+
 let running = false;
+let nightMode = false;
 
 let facingMode = "environment";
 
 let totalIn = 0;
 let totalOut = 0;
+let alertCount = 0;
 
-
-/*
-  Tracking data
-
-  Each detected person receives a temporary ID.
-*/
 let tracks = [];
-
 let nextID = 1;
 
+let alarmEnabled = false;
 
-/*
-  Counting line
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingURL = null;
 
-  0.50 = center of screen
-*/
-const LINE_POSITION = 0.50;
-
-
-/*
-  Minimum movement required before
-  a crossing is accepted.
-*/
-const CROSS_DISTANCE = 18;
+let alertCooldown = 0;
+let movementHistory = [];
 
 
-/*
-  How long an old track can survive
-  without detection.
-*/
-const MAX_MISSING = 12;
+/* Counting line */
+
+const LINE_POSITION = .50;
 
 
-/* ---------------- MODEL ---------------- */
+/* -------- AI MODEL -------- */
 
 async function loadModel(){
 
   loading.classList.remove("hidden");
 
   statusEl.innerText =
-    "Loading AI model...";
+    "Loading AI...";
 
   try{
 
     await tf.ready();
 
-    model = await cocoSsd.load({
-      base:"lite_mobilenet_v2"
-    });
+    model =
+      await cocoSsd.load({
+        base:"lite_mobilenet_v2"
+      });
 
     loading.classList.add("hidden");
 
@@ -372,25 +518,25 @@ async function loadModel(){
     dot.style.background =
       "#22c55e";
 
-  }catch(error){
+  }catch(e){
 
-    console.error(error);
+    console.error(e);
 
     loading.innerText =
-      "AI failed to load. Check internet.";
+      "AI loading failed. Check internet.";
 
     statusEl.innerText =
       "AI Error";
-
   }
 }
 
 
-/* ---------------- CAMERA ---------------- */
+/* -------- CAMERA -------- */
 
 async function startCamera(){
 
   if(!model){
+
     await loadModel();
   }
 
@@ -438,9 +584,9 @@ async function startCamera(){
 
     detect();
 
-  }catch(error){
+  }catch(e){
 
-    console.error(error);
+    console.error(e);
 
     statusEl.innerText =
       "Camera Error";
@@ -452,7 +598,6 @@ async function startCamera(){
       "Camera permission Allow karein.\n\n" +
       "GitHub Pages par HTTPS use karein."
     );
-
   }
 }
 
@@ -487,13 +632,13 @@ function stopCamera(){
     canvas.height
   );
 
+  current.innerText = "0";
+
   statusEl.innerText =
     "Camera Off";
 
   dot.style.background =
     "#ef4444";
-
-  currentEl.innerText = "0";
 }
 
 
@@ -507,6 +652,27 @@ async function switchCamera(){
   await startCamera();
 }
 
+
+/* -------- NIGHT MODE -------- */
+
+function toggleNight(){
+
+  nightMode =
+    !nightMode;
+
+  video.classList.toggle(
+    "night",
+    nightMode
+  );
+
+  statusEl.innerText =
+    nightMode
+    ? "Night Mode ON"
+    : "Night Mode OFF";
+}
+
+
+/* -------- CANVAS -------- */
 
 function setupCanvas(){
 
@@ -524,23 +690,21 @@ function setupCanvas(){
 }
 
 
-/* ---------------- DISTANCE ---------------- */
+/* -------- TRACKING -------- */
 
 function distance(a,b){
 
   const dx =
-    a.x - b.x;
+    a.x-b.x;
 
   const dy =
-    a.y - b.y;
+    a.y-b.y;
 
   return Math.sqrt(
-    dx*dx + dy*dy
+    dx*dx+dy*dy
   );
 }
 
-
-/* ---------------- TRACKING ---------------- */
 
 function updateTracks(detections){
 
@@ -548,32 +712,32 @@ function updateTracks(detections){
 
   const used = new Set();
 
-  /*
-    Match new detections to old tracks
-    using center-point distance.
-  */
 
   detections.forEach(det=>{
 
-    const [x,y,w,h] =
-      det.bbox;
+    const [
+      x,y,w,h
+    ] = det.bbox;
+
 
     const center = {
 
-      x:x + w/2,
+      x:x+w/2,
 
-      y:y + h/2
+      y:y+h/2
     };
+
 
     let best = null;
 
-    let bestDistance =
-      Infinity;
+    let bestDist = Infinity;
+
 
     tracks.forEach(track=>{
 
       if(used.has(track.id))
         return;
+
 
       const d =
         distance(
@@ -581,12 +745,14 @@ function updateTracks(detections){
           track.center
         );
 
+
       if(
-        d < bestDistance &&
-        d < 120
+        d < bestDist &&
+        d < 130
       ){
 
-        bestDistance = d;
+        bestDist = d;
+
         best = track;
       }
 
@@ -614,7 +780,7 @@ function updateTracks(detections){
 
     }else{
 
-      const track = {
+      newTracks.push({
 
         id:nextID++,
 
@@ -628,19 +794,12 @@ function updateTracks(detections){
 
         counted:false
 
-      };
-
-      newTracks.push(track);
+      });
 
     }
 
   });
 
-
-  /*
-    Keep old tracks briefly so small
-    detection gaps don't create new IDs.
-  */
 
   tracks.forEach(track=>{
 
@@ -648,14 +807,10 @@ function updateTracks(detections){
 
       track.missing++;
 
-      if(
-        track.missing <=
-        MAX_MISSING
-      ){
+      if(track.missing <= 10){
 
         newTracks.push(track);
       }
-
     }
 
   });
@@ -665,7 +820,7 @@ function updateTracks(detections){
 }
 
 
-/* ---------------- LINE CROSSING ---------------- */
+/* -------- IN / OUT -------- */
 
 function checkCrossing(track){
 
@@ -676,42 +831,33 @@ function checkCrossing(track){
     return;
 
 
-  const previousY =
-    track.previous.y;
-
-  const currentY =
-    track.center.y;
-
   const lineY =
     canvas.height *
     LINE_POSITION;
 
 
-  /*
-    Moving from above line
-    to below line
-  */
+  const oldY =
+    track.previous.y;
 
-  const crossedDown =
-    previousY <
-    lineY - CROSS_DISTANCE &&
-    currentY >
-    lineY + CROSS_DISTANCE;
+  const newY =
+    track.center.y;
 
 
-  /*
-    Moving from below line
-    to above line
-  */
-
-  const crossedUp =
-    previousY >
-    lineY + CROSS_DISTANCE &&
-    currentY <
-    lineY - CROSS_DISTANCE;
+  const down =
+    oldY <
+    lineY-18 &&
+    newY >
+    lineY+18;
 
 
-  if(crossedDown){
+  const up =
+    oldY >
+    lineY+18 &&
+    newY <
+    lineY-18;
+
+
+  if(down){
 
     totalIn++;
 
@@ -720,10 +866,15 @@ function checkCrossing(track){
 
     updateStats();
 
+    addLog(
+      "IN",
+      getCurrentPeople(),
+      "None"
+    );
   }
 
 
-  if(crossedUp){
+  if(up){
 
     totalOut++;
 
@@ -732,11 +883,16 @@ function checkCrossing(track){
 
     updateStats();
 
+    addLog(
+      "OUT",
+      getCurrentPeople(),
+      "None"
+    );
   }
 }
 
 
-/* ---------------- DRAW ---------------- */
+/* -------- DRAW -------- */
 
 function drawLine(){
 
@@ -745,14 +901,10 @@ function drawLine(){
     LINE_POSITION;
 
 
-  /*
-    Main counting line
-  */
-
-  ctx.lineWidth = 5;
-
   ctx.strokeStyle =
     "#00ff88";
+
+  ctx.lineWidth = 5;
 
   ctx.beginPath();
 
@@ -769,20 +921,16 @@ function drawLine(){
   ctx.stroke();
 
 
-  /*
-    Center label
-  */
-
   ctx.fillStyle =
     "#00ff88";
 
   ctx.font =
-    "bold 16px Arial";
+    "bold 15px Arial";
 
   ctx.fillText(
     "COUNTING LINE",
     12,
-    y - 10
+    y-10
   );
 }
 
@@ -791,17 +939,13 @@ function drawTracks(){
 
   tracks.forEach(track=>{
 
-    if(track.missing > 0)
+    if(track.missing)
       return;
 
 
     const [
-      x,
-      y,
-      w,
-      h
-    ] =
-      track.bbox;
+      x,y,w,h
+    ] = track.bbox;
 
 
     ctx.strokeStyle =
@@ -810,16 +954,8 @@ function drawTracks(){
     ctx.lineWidth = 3;
 
     ctx.strokeRect(
-      x,
-      y,
-      w,
-      h
+      x,y,w,h
     );
-
-
-    const text =
-      "Person #" +
-      track.id;
 
 
     ctx.fillStyle =
@@ -829,13 +965,18 @@ function drawTracks(){
       "bold 14px Arial";
 
 
+    const text =
+      "Person #"+track.id;
+
+
+    const width =
+      ctx.measureText(text).width;
+
+
     ctx.fillRect(
       x,
-      Math.max(
-        22,
-        y
-      ) - 22,
-      ctx.measureText(text).width + 12,
+      Math.max(22,y)-22,
+      width+12,
       22
     );
 
@@ -845,41 +986,545 @@ function drawTracks(){
 
     ctx.fillText(
       text,
-      x + 6,
-      Math.max(
-        22,
-        y
-      ) - 7
+      x+6,
+      Math.max(22,y)-7
     );
 
   });
 }
 
 
-/* ---------------- STATS ---------------- */
+/* -------- POSSIBLE FIGHT -------- */
 
-function updateStats(){
+/*
+  This is NOT a real fight classifier.
 
-  inEl.innerText =
-    totalIn;
+  It only looks for unusually rapid movement
+  among multiple detected people.
+*/
 
-  outEl.innerText =
-    totalOut;
+function checkPossibleFight(){
 
-
-  const inside =
-    Math.max(
-      0,
-      totalIn -
-      totalOut
+  const visible =
+    tracks.filter(
+      t=>t.missing===0
     );
 
-  insideEl.innerText =
-    inside;
+
+  if(visible.length < 2){
+
+    movementHistory = [];
+
+    return;
+  }
+
+
+  let movement = 0;
+
+
+  visible.forEach(track=>{
+
+    if(track.previous){
+
+      movement +=
+        distance(
+          track.center,
+          track.previous
+        );
+    }
+
+  });
+
+
+  movementHistory.push(
+    movement
+  );
+
+
+  if(
+    movementHistory.length > 12
+  ){
+
+    movementHistory.shift();
+  }
+
+
+  const average =
+    movementHistory.reduce(
+      (a,b)=>a+b,
+      0
+    ) /
+    movementHistory.length;
+
+
+  if(
+    average > 35 &&
+    alertCooldown <= 0
+  ){
+
+    triggerAlert();
+
+    alertCooldown = 120;
+  }
+
+
+  if(alertCooldown > 0){
+
+    alertCooldown--;
+  }
 }
 
 
-/* ---------------- AI ---------------- */
+function triggerAlert(){
+
+  alertCount++;
+
+  document.getElementById(
+    "alerts"
+  ).innerText =
+    alertCount;
+
+
+  alertBox.style.display =
+    "block";
+
+
+  addLog(
+    "ALERT",
+    getCurrentPeople(),
+    "Possible Fight"
+  );
+
+
+  if(alarmEnabled){
+
+    playAlarm();
+  }
+
+
+  setTimeout(()=>{
+
+    alertBox.style.display =
+      "none";
+
+  },2500);
+}
+
+
+/* -------- ALARM -------- */
+
+let audioContext = null;
+
+function toggleAlarm(){
+
+  alarmEnabled =
+    !alarmEnabled;
+
+  alert(
+    alarmEnabled
+    ? "Alarm Enabled"
+    : "Alarm Disabled"
+  );
+}
+
+
+function playAlarm(){
+
+  try{
+
+    if(!audioContext){
+
+      audioContext =
+        new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
+    }
+
+
+    const oscillator =
+      audioContext.createOscillator();
+
+    const gain =
+      audioContext.createGain();
+
+
+    oscillator.type =
+      "square";
+
+    oscillator.frequency.value =
+      900;
+
+
+    gain.gain.value =
+      .08;
+
+
+    oscillator.connect(gain);
+
+    gain.connect(
+      audioContext.destination
+    );
+
+
+    oscillator.start();
+
+
+    setTimeout(()=>{
+
+      oscillator.stop();
+
+    },1000);
+
+  }catch(e){
+
+    console.log(
+      "Audio blocked",
+      e
+    );
+  }
+}
+
+
+/* -------- RECORDING -------- */
+
+function toggleRecording(){
+
+  if(
+    mediaRecorder &&
+    mediaRecorder.state ===
+    "recording"
+  ){
+
+    stopRecording();
+
+  }else{
+
+    startRecording();
+
+  }
+}
+
+
+function startRecording(){
+
+  if(!stream){
+
+    alert(
+      "Pehle camera start karein."
+    );
+
+    return;
+  }
+
+
+  recordedChunks = [];
+
+
+  let options = {};
+
+
+  if(
+    MediaRecorder.isTypeSupported(
+      "video/webm;codecs=vp9"
+    )
+  ){
+
+    options.mimeType =
+      "video/webm;codecs=vp9";
+
+  }else if(
+    MediaRecorder.isTypeSupported(
+      "video/webm"
+    )
+  ){
+
+    options.mimeType =
+      "video/webm";
+  }
+
+
+  try{
+
+    mediaRecorder =
+      new MediaRecorder(
+        stream,
+        options
+      );
+
+  }catch(e){
+
+    alert(
+      "Recording browser mein supported nahi."
+    );
+
+    return;
+  }
+
+
+  mediaRecorder.ondataavailable =
+    event=>{
+
+      if(event.data.size > 0){
+
+        recordedChunks.push(
+          event.data
+        );
+      }
+    };
+
+
+  mediaRecorder.onstop =
+    finishRecording;
+
+
+  mediaRecorder.start();
+
+
+  recordingStatus.style.display =
+    "block";
+
+
+  statusEl.innerText =
+    "Recording...";
+
+}
+
+
+function stopRecording(){
+
+  if(
+    mediaRecorder &&
+    mediaRecorder.state ===
+    "recording"
+  ){
+
+    mediaRecorder.stop();
+
+  }
+}
+
+
+function finishRecording(){
+
+  const blob =
+    new Blob(
+      recordedChunks,
+      {
+        type:"video/webm"
+      }
+    );
+
+
+  if(recordingURL){
+
+    URL.revokeObjectURL(
+      recordingURL
+    );
+  }
+
+
+  recordingURL =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  preview.src =
+    recordingURL;
+
+  preview.style.display =
+    "block";
+
+
+  downloadRecording.href =
+    recordingURL;
+
+  downloadRecording.style.display =
+    "block";
+
+
+  recordingStatus.style.display =
+    "none";
+
+
+  statusEl.innerText =
+    "Recording Ready";
+}
+
+
+/* -------- DATA LOG -------- */
+
+let logs = [];
+
+
+function addLog(
+  event,
+  people,
+  alertText
+){
+
+  logs.push({
+
+    time:
+      new Date().toLocaleString(),
+
+    event:event,
+
+    people:people,
+
+    totalIn:totalIn,
+
+    totalOut:totalOut,
+
+    alert:alertText
+
+  });
+
+}
+
+
+function getCurrentPeople(){
+
+  return tracks.filter(
+    t=>t.missing===0
+  ).length;
+}
+
+
+/* -------- CSV -------- */
+
+function downloadCSV(){
+
+  if(!logs.length){
+
+    /*
+      Add current snapshot if
+      no IN/OUT/alert event exists.
+    */
+
+    addLog(
+      "SNAPSHOT",
+      getCurrentPeople(),
+      "None"
+    );
+  }
+
+
+  let csv =
+    "Time,Event,People,Total IN,Total OUT,Alert\n";
+
+
+  logs.forEach(row=>{
+
+    csv +=
+      '"' +
+      row.time +
+      '",' +
+      row.event +
+      ',' +
+      row.people +
+      ',' +
+      row.totalIn +
+      ',' +
+      row.totalOut +
+      ',"' +
+      row.alert +
+      '"\n';
+
+  });
+
+
+  const blob =
+    new Blob(
+      [csv],
+      {
+        type:
+        "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const a =
+    document.createElement("a");
+
+
+  a.href = url;
+
+  a.download =
+    "security-data.csv";
+
+  a.click();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+}
+
+
+/* -------- STATS -------- */
+
+function updateStats(){
+
+  document.getElementById(
+    "inCount"
+  ).innerText =
+    totalIn;
+
+
+  document.getElementById(
+    "outCount"
+  ).innerText =
+    totalOut;
+
+
+  document.getElementById(
+    "inside"
+  ).innerText =
+    Math.max(
+      0,
+      totalIn-totalOut
+    );
+}
+
+
+/* -------- RESET -------- */
+
+function resetAll(){
+
+  totalIn = 0;
+
+  totalOut = 0;
+
+  alertCount = 0;
+
+  tracks = [];
+
+  logs = [];
+
+  nextID = 1;
+
+  document.getElementById(
+    "alerts"
+  ).innerText = "0";
+
+
+  updateStats();
+
+
+  current.innerText =
+    "0";
+}
+
+
+/* -------- AI LOOP -------- */
 
 async function detect(){
 
@@ -913,17 +1558,15 @@ async function detect(){
       await model.detect(
         video,
         20,
-        0.50
+        .50
       );
 
 
     const people =
       predictions.filter(
-        prediction =>
-          prediction.class ===
-          "person" &&
-          prediction.score >=
-          0.50
+        p =>
+          p.class === "person" &&
+          p.score >= .50
       );
 
 
@@ -945,27 +1588,20 @@ async function detect(){
     drawTracks();
 
 
-    /*
-      Current visible people
-    */
-
     const visible =
-      tracks.filter(
-        t => t.missing === 0
-      ).length;
+      getCurrentPeople();
 
 
-    currentEl.innerText =
+    current.innerText =
       visible;
 
 
-  }catch(error){
+    checkPossibleFight();
 
-    console.error(
-      "AI detection:",
-      error
-    );
 
+  }catch(e){
+
+    console.error(e);
   }
 
 
@@ -978,32 +1614,11 @@ async function detect(){
 }
 
 
-/* ---------------- RESET ---------------- */
-
-function resetCounter(){
-
-  totalIn = 0;
-
-  totalOut = 0;
-
-  tracks = [];
-
-  nextID = 1;
-
-  updateStats();
-
-  currentEl.innerText =
-    "0";
-}
-
-
 window.addEventListener(
   "beforeunload",
   stopTracks
 );
 
-
-/* Load AI */
 
 loadModel();
 
