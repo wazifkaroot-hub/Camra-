@@ -1,1 +1,1013 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>AI People IN OUT Counter</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#070b12;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+
+header{
+  padding:18px 12px;
+  text-align:center;
+  background:linear-gradient(135deg,#111827,#172554);
+}
+
+h1{
+  margin:0;
+  font-size:23px;
+}
+
+header p{
+  margin:6px 0 0;
+  color:#9ca3af;
+  font-size:12px;
+}
+
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:14px;
+}
+
+.camera{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+  overflow:hidden;
+  border-radius:18px;
+  border:1px solid #263244;
+}
+
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+.status{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#000b;
+  padding:8px 12px;
+  border-radius:20px;
+  font-size:12px;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  display:inline-block;
+  background:#ef4444;
+  border-radius:50%;
+  margin-right:5px;
+}
+
+.loading{
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#000c;
+  z-index:5;
+  font-size:14px;
+}
+
+.hidden{
+  display:none;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px;
+  margin-top:12px;
+}
+
+.card{
+  background:#111827;
+  border:1px solid #263244;
+  border-radius:14px;
+  padding:13px 6px;
+  text-align:center;
+}
+
+.icon{
+  font-size:22px;
+}
+
+.number{
+  font-size:28px;
+  font-weight:bold;
+  margin:3px 0;
+}
+
+.label{
+  font-size:11px;
+  color:#9ca3af;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+  margin-top:12px;
+}
+
+button{
+  border:0;
+  border-radius:12px;
+  padding:14px 8px;
+  color:white;
+  background:#2563eb;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.stop{background:#dc2626}
+.switch{background:#7c3aed}
+.reset{background:#374151}
+
+.info{
+  margin-top:12px;
+  padding:14px;
+  border-radius:14px;
+  background:#111827;
+  border:1px solid #263244;
+  color:#aab2c0;
+  font-size:12px;
+  line-height:1.6;
+}
+
+@media(max-width:600px){
+
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .camera{
+    aspect-ratio:4/3;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>👥 AI People Counter</h1>
+  <p>IN / OUT • Line Crossing • Live Tracking</p>
+</header>
+
+<div class="container">
+
+  <div class="camera">
+
+    <video id="video" autoplay muted playsinline></video>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="loading" class="loading">
+      Loading AI...
+    </div>
+
+    <div class="status">
+      <span id="dot" class="dot"></span>
+      <span id="status">Starting...</span>
+    </div>
+
+  </div>
+
+  <div class="stats">
+
+    <div class="card">
+      <div class="icon">👥</div>
+      <div id="current" class="number">0</div>
+      <div class="label">CURRENT</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🟢</div>
+      <div id="inCount" class="number">0</div>
+      <div class="label">TOTAL IN</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🔴</div>
+      <div id="outCount" class="number">0</div>
+      <div class="label">TOTAL OUT</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">📊</div>
+      <div id="inside" class="number">0</div>
+      <div class="label">INSIDE</div>
+    </div>
+
+  </div>
+
+  <div class="controls">
+
+    <button onclick="startCamera()">
+      📷 Start Camera
+    </button>
+
+    <button class="stop" onclick="stopCamera()">
+      ⛔ Stop
+    </button>
+
+    <button class="switch" onclick="switchCamera()">
+      🔄 Switch Camera
+    </button>
+
+    <button class="reset" onclick="resetCounter()">
+      ♻️ Reset Counter
+    </button>
+
+  </div>
+
+  <div class="info">
+
+    <b>How to use:</b><br>
+
+    The horizontal line in the camera is the counting line.
+    When a detected person moves across the line, the system
+    determines the direction and increases IN or OUT.
+
+    <br><br>
+
+    🟢 <b>Green side → IN</b><br>
+    🔴 <b>Red side → OUT</b>
+
+    <br><br>
+
+    <b>Important:</b> This is a browser demo using AI object
+    detection and lightweight tracking. Accuracy depends on
+    camera angle, lighting, distance and people overlapping.
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+<script>
+
+const video =
+document.getElementById("video");
+
+const canvas =
+document.getElementById("canvas");
+
+const ctx =
+canvas.getContext("2d");
+
+const loading =
+document.getElementById("loading");
+
+const statusEl =
+document.getElementById("status");
+
+const dot =
+document.getElementById("dot");
+
+const currentEl =
+document.getElementById("current");
+
+const inEl =
+document.getElementById("inCount");
+
+const outEl =
+document.getElementById("outCount");
+
+const insideEl =
+document.getElementById("inside");
+
+
+let model = null;
+let stream = null;
+let running = false;
+
+let facingMode = "environment";
+
+let totalIn = 0;
+let totalOut = 0;
+
+
+/*
+  Tracking data
+
+  Each detected person receives a temporary ID.
+*/
+let tracks = [];
+
+let nextID = 1;
+
+
+/*
+  Counting line
+
+  0.50 = center of screen
+*/
+const LINE_POSITION = 0.50;
+
+
+/*
+  Minimum movement required before
+  a crossing is accepted.
+*/
+const CROSS_DISTANCE = 18;
+
+
+/*
+  How long an old track can survive
+  without detection.
+*/
+const MAX_MISSING = 12;
+
+
+/* ---------------- MODEL ---------------- */
+
+async function loadModel(){
+
+  loading.classList.remove("hidden");
+
+  statusEl.innerText =
+    "Loading AI model...";
+
+  try{
+
+    await tf.ready();
+
+    model = await cocoSsd.load({
+      base:"lite_mobilenet_v2"
+    });
+
+    loading.classList.add("hidden");
+
+    statusEl.innerText =
+      "AI Ready";
+
+    dot.style.background =
+      "#22c55e";
+
+  }catch(error){
+
+    console.error(error);
+
+    loading.innerText =
+      "AI failed to load. Check internet.";
+
+    statusEl.innerText =
+      "AI Error";
+
+  }
+}
+
+
+/* ---------------- CAMERA ---------------- */
+
+async function startCamera(){
+
+  if(!model){
+    await loadModel();
+  }
+
+  if(!model) return;
+
+  stopTracks();
+
+  try{
+
+    stream =
+      await navigator.mediaDevices.getUserMedia({
+
+        audio:false,
+
+        video:{
+          facingMode:{
+            ideal:facingMode
+          },
+
+          width:{
+            ideal:1280
+          },
+
+          height:{
+            ideal:720
+          }
+        }
+
+      });
+
+    video.srcObject =
+      stream;
+
+    await video.play();
+
+    running = true;
+
+    statusEl.innerText =
+      "Camera Active";
+
+    dot.style.background =
+      "#22c55e";
+
+    setupCanvas();
+
+    detect();
+
+  }catch(error){
+
+    console.error(error);
+
+    statusEl.innerText =
+      "Camera Error";
+
+    dot.style.background =
+      "#ef4444";
+
+    alert(
+      "Camera permission Allow karein.\n\n" +
+      "GitHub Pages par HTTPS use karein."
+    );
+
+  }
+}
+
+
+function stopTracks(){
+
+  if(stream){
+
+    stream
+      .getTracks()
+      .forEach(track=>{
+        track.stop();
+      });
+
+    stream = null;
+  }
+}
+
+
+function stopCamera(){
+
+  running = false;
+
+  stopTracks();
+
+  video.srcObject = null;
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  statusEl.innerText =
+    "Camera Off";
+
+  dot.style.background =
+    "#ef4444";
+
+  currentEl.innerText = "0";
+}
+
+
+async function switchCamera(){
+
+  facingMode =
+    facingMode === "environment"
+    ? "user"
+    : "environment";
+
+  await startCamera();
+}
+
+
+function setupCanvas(){
+
+  if(
+    video.videoWidth &&
+    video.videoHeight
+  ){
+
+    canvas.width =
+      video.videoWidth;
+
+    canvas.height =
+      video.videoHeight;
+  }
+}
+
+
+/* ---------------- DISTANCE ---------------- */
+
+function distance(a,b){
+
+  const dx =
+    a.x - b.x;
+
+  const dy =
+    a.y - b.y;
+
+  return Math.sqrt(
+    dx*dx + dy*dy
+  );
+}
+
+
+/* ---------------- TRACKING ---------------- */
+
+function updateTracks(detections){
+
+  const newTracks = [];
+
+  const used = new Set();
+
+  /*
+    Match new detections to old tracks
+    using center-point distance.
+  */
+
+  detections.forEach(det=>{
+
+    const [x,y,w,h] =
+      det.bbox;
+
+    const center = {
+
+      x:x + w/2,
+
+      y:y + h/2
+    };
+
+    let best = null;
+
+    let bestDistance =
+      Infinity;
+
+    tracks.forEach(track=>{
+
+      if(used.has(track.id))
+        return;
+
+      const d =
+        distance(
+          center,
+          track.center
+        );
+
+      if(
+        d < bestDistance &&
+        d < 120
+      ){
+
+        bestDistance = d;
+        best = track;
+      }
+
+    });
+
+
+    if(best){
+
+      used.add(best.id);
+
+      best.previous =
+        best.center;
+
+      best.center =
+        center;
+
+      best.bbox =
+        det.bbox;
+
+      best.missing = 0;
+
+      checkCrossing(best);
+
+      newTracks.push(best);
+
+    }else{
+
+      const track = {
+
+        id:nextID++,
+
+        center:center,
+
+        previous:center,
+
+        bbox:det.bbox,
+
+        missing:0,
+
+        counted:false
+
+      };
+
+      newTracks.push(track);
+
+    }
+
+  });
+
+
+  /*
+    Keep old tracks briefly so small
+    detection gaps don't create new IDs.
+  */
+
+  tracks.forEach(track=>{
+
+    if(!used.has(track.id)){
+
+      track.missing++;
+
+      if(
+        track.missing <=
+        MAX_MISSING
+      ){
+
+        newTracks.push(track);
+      }
+
+    }
+
+  });
+
+
+  tracks = newTracks;
+}
+
+
+/* ---------------- LINE CROSSING ---------------- */
+
+function checkCrossing(track){
+
+  if(track.counted)
+    return;
+
+  if(!track.previous)
+    return;
+
+
+  const previousY =
+    track.previous.y;
+
+  const currentY =
+    track.center.y;
+
+  const lineY =
+    canvas.height *
+    LINE_POSITION;
+
+
+  /*
+    Moving from above line
+    to below line
+  */
+
+  const crossedDown =
+    previousY <
+    lineY - CROSS_DISTANCE &&
+    currentY >
+    lineY + CROSS_DISTANCE;
+
+
+  /*
+    Moving from below line
+    to above line
+  */
+
+  const crossedUp =
+    previousY >
+    lineY + CROSS_DISTANCE &&
+    currentY <
+    lineY - CROSS_DISTANCE;
+
+
+  if(crossedDown){
+
+    totalIn++;
+
+    track.counted =
+      true;
+
+    updateStats();
+
+  }
+
+
+  if(crossedUp){
+
+    totalOut++;
+
+    track.counted =
+      true;
+
+    updateStats();
+
+  }
+}
+
+
+/* ---------------- DRAW ---------------- */
+
+function drawLine(){
+
+  const y =
+    canvas.height *
+    LINE_POSITION;
+
+
+  /*
+    Main counting line
+  */
+
+  ctx.lineWidth = 5;
+
+  ctx.strokeStyle =
+    "#00ff88";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    y
+  );
+
+  ctx.lineTo(
+    canvas.width,
+    y
+  );
+
+  ctx.stroke();
+
+
+  /*
+    Center label
+  */
+
+  ctx.fillStyle =
+    "#00ff88";
+
+  ctx.font =
+    "bold 16px Arial";
+
+  ctx.fillText(
+    "COUNTING LINE",
+    12,
+    y - 10
+  );
+}
+
+
+function drawTracks(){
+
+  tracks.forEach(track=>{
+
+    if(track.missing > 0)
+      return;
+
+
+    const [
+      x,
+      y,
+      w,
+      h
+    ] =
+      track.bbox;
+
+
+    ctx.strokeStyle =
+      "#00ff88";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+      x,
+      y,
+      w,
+      h
+    );
+
+
+    const text =
+      "Person #" +
+      track.id;
+
+
+    ctx.fillStyle =
+      "#00ff88";
+
+    ctx.font =
+      "bold 14px Arial";
+
+
+    ctx.fillRect(
+      x,
+      Math.max(
+        22,
+        y
+      ) - 22,
+      ctx.measureText(text).width + 12,
+      22
+    );
+
+
+    ctx.fillStyle =
+      "#000";
+
+    ctx.fillText(
+      text,
+      x + 6,
+      Math.max(
+        22,
+        y
+      ) - 7
+    );
+
+  });
+}
+
+
+/* ---------------- STATS ---------------- */
+
+function updateStats(){
+
+  inEl.innerText =
+    totalIn;
+
+  outEl.innerText =
+    totalOut;
+
+
+  const inside =
+    Math.max(
+      0,
+      totalIn -
+      totalOut
+    );
+
+  insideEl.innerText =
+    inside;
+}
+
+
+/* ---------------- AI ---------------- */
+
+async function detect(){
+
+  if(
+    !running ||
+    !model
+  ){
+
+    return;
+  }
+
+
+  if(
+    video.readyState < 2
+  ){
+
+    requestAnimationFrame(
+      detect
+    );
+
+    return;
+  }
+
+
+  try{
+
+    setupCanvas();
+
+
+    const predictions =
+      await model.detect(
+        video,
+        20,
+        0.50
+      );
+
+
+    const people =
+      predictions.filter(
+        prediction =>
+          prediction.class ===
+          "person" &&
+          prediction.score >=
+          0.50
+      );
+
+
+    updateTracks(
+      people
+    );
+
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    drawLine();
+
+    drawTracks();
+
+
+    /*
+      Current visible people
+    */
+
+    const visible =
+      tracks.filter(
+        t => t.missing === 0
+      ).length;
+
+
+    currentEl.innerText =
+      visible;
+
+
+  }catch(error){
+
+    console.error(
+      "AI detection:",
+      error
+    );
+
+  }
+
+
+  if(running){
+
+    requestAnimationFrame(
+      detect
+    );
+  }
+}
+
+
+/* ---------------- RESET ---------------- */
+
+function resetCounter(){
+
+  totalIn = 0;
+
+  totalOut = 0;
+
+  tracks = [];
+
+  nextID = 1;
+
+  updateStats();
+
+  currentEl.innerText =
+    "0";
+}
+
+
+window.addEventListener(
+  "beforeunload",
+  stopTracks
+);
+
+
+/* Load AI */
+
+loadModel();
+
+</script>
+
+</body>
+</html>
